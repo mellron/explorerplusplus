@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -1 Explorer++/Explorer++/*.h Explorer++/Explorer++/*.cpp | wc -l && ls -1 Explorer++/Explorer++/ -d */ | head -15)",
+      "Bash(grep -r \"signal\" Explorer++/Explorer++/*.h | grep -c \"boost::signals2\")",
+      "Bash(grep -h \"SPDX-License-Identifier\" Explorer++/Explorer++/*.h | sort -u)",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\" Explorer++/Explorer++/*.h Explorer++/Explorer++/*.cpp 2>/dev/null | wc -l)",
+      "Bash(grep -r \"class.*Interface\" Explorer++/Explorer++/*.h | wc -l)",
+      "Bash(git fetch origin Development && git checkout Development)"
+    ]
+  }
+}

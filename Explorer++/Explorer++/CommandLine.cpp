@@ -13,6 +13,7 @@
 #include <boost/log/core.hpp>
 #include <CLI/App.hpp>
 #include <CLI/Config.hpp>
+#include <CLI/ExtraValidators.hpp>
 #include <CLI/Formatter.hpp>
 #include <iostream>
 #include <optional>

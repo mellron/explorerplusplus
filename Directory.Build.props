@@ -1,3 +1,11 @@
 <Project>
  <Import Project="$(MSBuildThisFileDirectory)Explorer++\ThirdParty\vcpkg\scripts\buildsystems\msbuild\vcpkg.props" />
+ <ItemDefinitionGroup>
+  <ClCompile>
+   <AdditionalOptions>/wd5321 %(AdditionalOptions)</AdditionalOptions>
+  </ClCompile>
+  <Link>
+   <AdditionalOptions>/IGNORE:4006 %(AdditionalOptions)</AdditionalOptions>
+  </Link>
+ </ItemDefinitionGroup>
 </Project>
