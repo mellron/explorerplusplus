@@ -130,10 +130,7 @@ void MainWindow::UpdateWindowText()
 
 	TCHAR szTitle[512];
 
-	TCHAR szTemp[64];
-	LoadString(m_resourceInstance, IDS_MAIN_WINDOW_TITLE, szTemp, SIZEOF_ARRAY(szTemp));
-	StringCchPrintf(szTitle, SIZEOF_ARRAY(szTitle), szTemp, folderDisplayName.c_str(),
-		NExplorerplusplus::APP_NAME);
+	StringCchCopy(szTitle, SIZEOF_ARRAY(szTitle), folderDisplayName.c_str());
 
 	if (m_config->showUserNameInTitleBar.get() || m_config->showPrivilegeLevelInTitleBar.get())
 	{

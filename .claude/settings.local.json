@@ -6,7 +6,9 @@
       "Bash(grep -h \"SPDX-License-Identifier\" Explorer++/Explorer++/*.h | sort -u)",
       "Bash(grep -r \"TODO\\\\|FIXME\\\\|XXX\\\\|HACK\" Explorer++/Explorer++/*.h Explorer++/Explorer++/*.cpp 2>/dev/null | wc -l)",
       "Bash(grep -r \"class.*Interface\" Explorer++/Explorer++/*.h | wc -l)",
-      "Bash(git fetch origin Development && git checkout Development)"
+      "Bash(git fetch origin Development && git checkout Development)",
+      "Read(//c/Program Files/Microsoft Visual Studio/**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/**)"
     ]
   }
 }
