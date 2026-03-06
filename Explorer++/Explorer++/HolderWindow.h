@@ -25,6 +25,7 @@ public:
 	void SetContentChild(HWND contentChild);
 	void SetResizedCallback(ResizedCallback callback);
 	void SetCloseButtonClickedCallback(CloseButtonClickedCallback callback);
+	void SetCaptionSectionHeight(int height);
 
 private:
 	static constexpr WCHAR CLASS_NAME[] = L"Holder";
@@ -77,6 +78,7 @@ private:
 	std::unique_ptr<MainFontSetter> m_fontSetter;
 	std::unique_ptr<MainFontSetter> m_tooltipFontSetter;
 	std::optional<int> m_captionSectionHeight;
+	std::optional<int> m_captionSectionHeightOverride;
 
 	HWND m_toolbar;
 	wil::unique_himagelist m_toolbarImageList;

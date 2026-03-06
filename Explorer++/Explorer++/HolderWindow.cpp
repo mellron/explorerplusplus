@@ -305,8 +305,18 @@ void HolderWindow::UpdateLayout(int width, int height)
 	assert(res);
 }
 
+void HolderWindow::SetCaptionSectionHeight(int height)
+{
+	m_captionSectionHeightOverride = height;
+}
+
 int HolderWindow::GetCaptionSectionHeight()
 {
+	if (m_captionSectionHeightOverride)
+	{
+		return *m_captionSectionHeightOverride;
+	}
+
 	if (!m_captionSectionHeight)
 	{
 		m_captionSectionHeight = CalculateCaptionSectionHeight();

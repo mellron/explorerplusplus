@@ -91,6 +91,10 @@ void TabContainer::Initialize(HWND parent)
 		ImageList_Create(dpiScaledSize, dpiScaledSize, ILC_COLOR32 | ILC_MASK, 0, 100));
 	TabCtrl_SetImageList(m_hwnd, m_tabCtrlImageList.get());
 
+	// Reduce vertical padding so the tab row height matches the Folders header bar.
+	TabCtrl_SetPadding(m_hwnd, MulDiv(6, dpi, USER_DEFAULT_SCREEN_DPI),
+		MulDiv(1, dpi, USER_DEFAULT_SCREEN_DPI));
+
 	AddDefaultTabIcons(m_tabCtrlImageList.get());
 
 	m_windowSubclasses.push_back(std::make_unique<WindowSubclassWrapper>(m_hwnd,
@@ -245,17 +249,20 @@ LRESULT TabContainer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			RECT tabRect;
 			TabCtrl_GetItemRect(hwnd, i, &tabRect);
 
+			// Extend fill to full client height so tabs align with the Folders header bar.
+			RECT fillRect = { tabRect.left, 0, tabRect.right, clientRect.bottom };
+
 			bool isSelected = (i == selectedTab);
 			COLORREF bgColor = isSelected ? RGB(75, 75, 75) : RGB(50, 50, 50);
 			wil::unique_hbrush bgBrush(CreateSolidBrush(bgColor));
-			FillRect(hdc, &tabRect, bgBrush.get());
+			FillRect(hdc, &fillRect, bgBrush.get());
 
 			wil::unique_hbrush borderBrush(CreateSolidBrush(RGB(90, 90, 90)));
-			FrameRect(hdc, &tabRect, borderBrush.get());
+			FrameRect(hdc, &fillRect, borderBrush.get());
 
 			if (isSelected)
 			{
-				RECT accentRect = { tabRect.left, tabRect.top, tabRect.right, tabRect.top + 2 };
+				RECT accentRect = { fillRect.left, 0, fillRect.right, 2 };
 				wil::unique_hbrush accentBrush(CreateSolidBrush(RGB(0, 120, 212)));
 				FillRect(hdc, &accentRect, accentBrush.get());
 			}
@@ -267,13 +274,13 @@ LRESULT TabContainer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			item.cchTextMax = ARRAYSIZE(tabText);
 			TabCtrl_GetItem(hwnd, i, &item);
 
-			RECT textRect = tabRect;
+			RECT textRect = fillRect;
 			textRect.left += 4;
 			textRect.right -= 2;
 
 			if (item.iImage >= 0 && m_tabCtrlImageList.get())
 			{
-				int iconY = tabRect.top + (tabRect.bottom - tabRect.top - iconSize) / 2;
+				int iconY = fillRect.top + (fillRect.bottom - fillRect.top - iconSize) / 2;
 				ImageList_Draw(m_tabCtrlImageList.get(), item.iImage, hdc, textRect.left, iconY,
 					ILD_TRANSPARENT);
 				textRect.left += iconSize + 4;

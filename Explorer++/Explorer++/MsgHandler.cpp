@@ -532,6 +532,7 @@ void Explorerplusplus::OnSize(HWND hwnd, UINT state, int mainWindowWidth, int ma
 
 	iHolderWidth = m_config->treeViewWidth;
 
+	m_treeViewHolder->SetCaptionSectionHeight(tabWindowHeight);
 	SetWindowPos(m_treeViewHolder->GetHWND(), nullptr, 0, iHolderTop, iHolderWidth, iHolderHeight,
 		SWP_NOZORDER);
 

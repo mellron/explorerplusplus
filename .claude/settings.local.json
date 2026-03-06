@@ -8,7 +8,8 @@
       "Bash(grep -r \"class.*Interface\" Explorer++/Explorer++/*.h | wc -l)",
       "Bash(git fetch origin Development && git checkout Development)",
       "Read(//c/Program Files/Microsoft Visual Studio/**)",
-      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/**)"
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio/**)",
+      "Bash(MSBuild:*)"
     ]
   }
 }
