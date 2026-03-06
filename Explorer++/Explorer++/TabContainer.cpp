@@ -7,6 +7,7 @@
 #include "Bookmarks/BookmarkHelper.h"
 #include "Config.h"
 #include "CoreInterface.h"
+#include "DarkModeHelper.h"
 #include "Icon.h"
 #include "IconResourceLoader.h"
 #include "MainResource.h"
@@ -194,6 +195,97 @@ LRESULT TabContainer::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			OnDropScrollTimer();
 		}
 		break;
+
+	case WM_ERASEBKGND:
+	{
+		if (!DarkModeHelper::GetInstance().IsDarkModeEnabled())
+		{
+			break;
+		}
+
+		auto hdc = reinterpret_cast<HDC>(wParam);
+		RECT rc;
+		GetClientRect(hwnd, &rc);
+		FillRect(hdc, &rc, DarkModeHelper::GetInstance().GetBackgroundBrush());
+		return 1;
+	}
+
+	case WM_PAINT:
+	{
+		if (!DarkModeHelper::GetInstance().IsDarkModeEnabled())
+		{
+			break;
+		}
+
+		PAINTSTRUCT ps;
+		HDC hdc = BeginPaint(hwnd, &ps);
+
+		RECT clientRect;
+		GetClientRect(hwnd, &clientRect);
+		FillRect(hdc, &clientRect, DarkModeHelper::GetInstance().GetBackgroundBrush());
+
+		int tabCount = TabCtrl_GetItemCount(hwnd);
+		int selectedTab = TabCtrl_GetCurSel(hwnd);
+
+		auto font = reinterpret_cast<HFONT>(SendMessage(hwnd, WM_GETFONT, 0, 0));
+		wil::unique_select_object selectFont;
+		if (font)
+		{
+			selectFont = wil::SelectObject(hdc, font);
+		}
+
+		SetBkMode(hdc, TRANSPARENT);
+		SetTextColor(hdc, DarkModeHelper::TEXT_COLOR);
+
+		UINT dpi = DpiCompatibility::GetInstance().GetDpiForWindow(hwnd);
+		int iconSize = MulDiv(ICON_SIZE_96DPI, dpi, USER_DEFAULT_SCREEN_DPI);
+
+		for (int i = 0; i < tabCount; i++)
+		{
+			RECT tabRect;
+			TabCtrl_GetItemRect(hwnd, i, &tabRect);
+
+			bool isSelected = (i == selectedTab);
+			COLORREF bgColor = isSelected ? RGB(75, 75, 75) : RGB(50, 50, 50);
+			wil::unique_hbrush bgBrush(CreateSolidBrush(bgColor));
+			FillRect(hdc, &tabRect, bgBrush.get());
+
+			wil::unique_hbrush borderBrush(CreateSolidBrush(RGB(90, 90, 90)));
+			FrameRect(hdc, &tabRect, borderBrush.get());
+
+			if (isSelected)
+			{
+				RECT accentRect = { tabRect.left, tabRect.top, tabRect.right, tabRect.top + 2 };
+				wil::unique_hbrush accentBrush(CreateSolidBrush(RGB(0, 120, 212)));
+				FillRect(hdc, &accentRect, accentBrush.get());
+			}
+
+			WCHAR tabText[MAX_PATH] = {};
+			TCITEM item = {};
+			item.mask = TCIF_TEXT | TCIF_IMAGE;
+			item.pszText = tabText;
+			item.cchTextMax = ARRAYSIZE(tabText);
+			TabCtrl_GetItem(hwnd, i, &item);
+
+			RECT textRect = tabRect;
+			textRect.left += 4;
+			textRect.right -= 2;
+
+			if (item.iImage >= 0 && m_tabCtrlImageList.get())
+			{
+				int iconY = tabRect.top + (tabRect.bottom - tabRect.top - iconSize) / 2;
+				ImageList_Draw(m_tabCtrlImageList.get(), item.iImage, hdc, textRect.left, iconY,
+					ILD_TRANSPARENT);
+				textRect.left += iconSize + 4;
+			}
+
+			DrawText(hdc, tabText, -1, &textRect,
+				DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS);
+		}
+
+		EndPaint(hwnd, &ps);
+		return 0;
+	}
 
 	case WM_MENUSELECT:
 		/* Forward the message to the main window so it can

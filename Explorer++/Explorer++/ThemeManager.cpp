@@ -361,15 +361,35 @@ void ThemeManager::ApplyThemeToRebar(HWND hwnd, bool enableDarkMode)
 	if (enableDarkMode)
 	{
 		SetWindowSubclass(hwnd, RebarSubclass, SUBCLASS_ID, 0);
+
+		// Remove band borders — they render as bright white lines in dark mode.
+		DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+		SetWindowLong(hwnd, GWL_STYLE, style & ~RBS_BANDBORDERS);
 	}
 	else
 	{
 		RemoveWindowSubclass(hwnd, RebarSubclass, SUBCLASS_ID);
+
+		DWORD style = GetWindowLong(hwnd, GWL_STYLE);
+		SetWindowLong(hwnd, GWL_STYLE, style | RBS_BANDBORDERS);
 	}
 }
 
 void ThemeManager::ApplyThemeToToolbar(HWND hwnd, bool enableDarkMode)
 {
+	// Stripping visual styles forces classic GDI rendering, which correctly respects
+	// clrBtnFace/clrBtnHighlight from NM_CUSTOMDRAW for all button states including checked.
+	// Without this, the visual style draws a bright checked-state background regardless of
+	// the custom draw colors.
+	if (enableDarkMode)
+	{
+		SetWindowTheme(hwnd, L"", L"");
+	}
+	else
+	{
+		SetWindowTheme(hwnd, nullptr, nullptr);
+	}
+
 	COLORREF insertMarkColor;
 
 	if (enableDarkMode)
@@ -986,12 +1006,39 @@ LRESULT ThemeManager::OnToolbarCustomDraw(NMTBCUSTOMDRAW *customDraw)
 	switch (customDraw->nmcd.dwDrawStage)
 	{
 	case CDDS_PREPAINT:
-		return CDRF_NOTIFYITEMDRAW;
+		return CDRF_NOTIFYITEMDRAW | CDRF_NOTIFYPOSTPAINT;
 
 	case CDDS_ITEMPREPAINT:
+	{
+		bool isChecked = (customDraw->nmcd.uItemState & CDIS_CHECKED) != 0;
 		customDraw->clrText = DarkModeHelper::TEXT_COLOR;
 		customDraw->clrHighlightHotTrack = DarkModeHelper::HOT_ITEM_HIGHLIGHT_COLOR;
-		return TBCDRF_USECDCOLORS | TBCDRF_HILITEHOTTRACK;
+		customDraw->clrBtnFace = isChecked ? RGB(75, 75, 75) : DarkModeHelper::BACKGROUND_COLOR;
+		customDraw->clrBtnHighlight = DarkModeHelper::HOT_ITEM_HIGHLIGHT_COLOR;
+		return TBCDRF_USECDCOLORS | TBCDRF_HILITEHOTTRACK | TBCDRF_NOEDGES;
+	}
+
+	case CDDS_POSTPAINT:
+	{
+		// Separators are drawn outside of item custom draw by classic GDI rendering
+		// and appear as bright white lines. Paint over them with the background color.
+		HWND toolbar = customDraw->nmcd.hdr.hwndFrom;
+		HDC hdc = customDraw->nmcd.hdc;
+		int count = static_cast<int>(SendMessage(toolbar, TB_BUTTONCOUNT, 0, 0));
+		wil::unique_hbrush bgBrush(CreateSolidBrush(DarkModeHelper::BACKGROUND_COLOR));
+		for (int i = 0; i < count; i++)
+		{
+			TBBUTTON btn = {};
+			SendMessage(toolbar, TB_GETBUTTON, i, reinterpret_cast<LPARAM>(&btn));
+			if (btn.fsStyle & BTNS_SEP)
+			{
+				RECT rc = {};
+				SendMessage(toolbar, TB_GETITEMRECT, i, reinterpret_cast<LPARAM>(&rc));
+				FillRect(hdc, &rc, bgBrush.get());
+			}
+		}
+		return CDRF_DODEFAULT;
+	}
 	}
 
 	return CDRF_DODEFAULT;

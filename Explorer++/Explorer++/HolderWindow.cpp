@@ -229,6 +229,19 @@ void HolderWindow::PerformPaint(const PAINTSTRUCT &ps)
 
 	FillRect(ps.hdc, &ps.rcPaint, backgroundBrush);
 
+	if (darkModeHelper.IsDarkModeEnabled())
+	{
+		int captionHeight = GetCaptionSectionHeight();
+
+		RECT captionRect = { ps.rcPaint.left, 0, ps.rcPaint.right, captionHeight };
+		wil::unique_hbrush captionBrush(CreateSolidBrush(RGB(75, 75, 75)));
+		FillRect(ps.hdc, &captionRect, captionBrush.get());
+
+		RECT accentRect = { ps.rcPaint.left, 0, ps.rcPaint.right, 2 };
+		wil::unique_hbrush accentBrush(CreateSolidBrush(RGB(0, 120, 212)));
+		FillRect(ps.hdc, &accentRect, accentBrush.get());
+	}
+
 	std::wstring caption = GetWindowString(m_hwnd);
 	auto selectFont = wil::SelectObject(ps.hdc, m_font);
 	SetBkMode(ps.hdc, TRANSPARENT);
