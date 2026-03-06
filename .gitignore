@@ -293,3 +293,6 @@ __pycache__/
 
 # vcpkg
 vcpkg_installed/
+
+# Local screenshot/reference images
+images/
